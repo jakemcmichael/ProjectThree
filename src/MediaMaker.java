@@ -9,9 +9,8 @@ public class MediaMaker{
 		this.year = year;
 	}
 	
-	public void getTitle(){
-		for(int x = 0; x < title.size(); x++)
-			System.out.println(title.get(x));
+	public String getTitle(){
+		return title.get(0);
 	}
 	
 	public ArrayList<String> getYear(){

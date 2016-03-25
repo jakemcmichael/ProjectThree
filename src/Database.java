@@ -24,8 +24,6 @@ public class Database implements Iterable<Media> {
 	private String curName = "";
 	private ArrayList<String> titles = new ArrayList<String>();
 	private ArrayList<String> years = new ArrayList<String>();
-	boolean lastLineEmpty = false;
-	int check = 1;
 
 	/** Constructs an empty Database object. */
 	public Database() {
@@ -42,7 +40,7 @@ public class Database implements Iterable<Media> {
 	 *            File containing data on Series and Episodes.
 	 * @throws IOException
 	 */
-	public Database(String movieFile, String TVFile, String actorFile) throws IOException {
+	public Database(String movieFile, String TVFile) throws IOException {
 		this.list = new ArrayList<Media>();
 		FileReader moviefr = new FileReader(movieFile);
 		BufferedReader moviebr = new BufferedReader(moviefr);
@@ -66,17 +64,6 @@ public class Database implements Iterable<Media> {
 		}
 		tvbr.close();
 
-		FileReader actfr = new FileReader(actorFile);
-		BufferedReader actbr = new BufferedReader(actfr);
-		line = actbr.readLine();
-		// Reads each line of the Actor file
-		while (line != null) {
-			if(line.isEmpty())
-				lastLineEmpty = true;
-			mediaMakerParser(line); // TODO add this method
-			line = actbr.readLine();
-		}
-		actbr.close();
 	}
 
 	/**
@@ -202,60 +189,66 @@ public class Database implements Iterable<Media> {
 		this.add(movie);
 	}
 
-	public void mediaMakerParser(String data) {
-		String name = "";
-		String title = "";
-		String year = "";
-		int marker = 0;
-		String[] tokens = data.split("\\s+");
-		if (!data.isEmpty()) { 
-			if (tokens[2].contains("(")) {
-				if (tokens[0].contains(",")) {
-					name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(',')) + " " + tokens[2];
-					marker = 3;
+	public void mediaMakerParser(String actorFile) throws IOException {
+		FileReader actfr = new FileReader(actorFile);
+		BufferedReader actbr = new BufferedReader(actfr);
+		String line = actbr.readLine();
+		// Reads each line of the Actor file
+		while (line != null) {
+			String name = "";
+			String title = "";
+			String year = "";
+			int marker = 0;
+			String[] tokens = line.split("\\s+");
+			if (!line.isEmpty()) { 
+				if (tokens[2].contains("(")) {
+					if (tokens[0].contains(",")) {
+						name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(',')) + " " + tokens[2];
+						marker = 3;
+					}
+				} else if (!tokens[0].contains(",")) {
+					marker = 0;
+				} else {
+					name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(','));
+					marker = 2;
 				}
-			} else if (!tokens[0].contains(",")) {
-				marker = 0;
-			} else {
-				name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(','));
-				marker = 2;
 			}
-		}
-		int marker2 = 0;
-		for (int x = marker; x < tokens.length; x++) {
-			if (tokens[x].contains("(")) {
-				marker2 = x;
-				break;
+			int marker2 = 0;
+			for (int x = marker; x < tokens.length; x++) {
+				if (tokens[x].contains("(")) {
+					marker2 = x;
+					break;
+				}
 			}
+			for (int i = marker; i < marker2; i++) {
+				title += tokens[i] + " ";
+			}
+			year = tokens[marker2];
+				
+			if(!name.isEmpty()){
+				curName = name;
+			}
+			if(!line.isEmpty()){
+				titles.add(title);
+				years.add(year);
+			}
+			if(line.isEmpty()){
+				MediaMaker maker = new MediaMaker(titles, years);
+				list2.put(curName, maker);
+				titles.clear();
+				years.clear();
+			}
+			line = actbr.readLine();
 		}
-		for (int i = marker; i < marker2; i++) {
-			title += tokens[i] + " ";
-		}
-		year = tokens[marker2];
-			
-		if(!name.isEmpty()){
-			curName = name;
-		}
-		if(!data.isEmpty()){
-			titles.add(title);
-			years.add(year);
-		}
-		if(title.isEmpty() || lastLineEmpty){
-			mapCreator(curName, titles, years);
-			System.out.println(curName);
-			System.out.println(titles.size());
-			titles.clear();
-			years.clear();
-		}
+		MediaMaker maker = new MediaMaker(titles, years);
+		//System.out.println(curName);
+		list2.put(curName, maker);
+		actbr.close();
 	}
 	
-	public void mapCreator(String name, ArrayList<String> title, ArrayList<String> year){
-		MediaMaker maker = new MediaMaker(title, year);
-		list2.put(name, maker);
-	}
 	
 	public void searchMap(String in){
-		list2.get(in).getTitle();
+		System.out.println(list2.get(in).getTitle());
 	}
 	
 	public String get(){

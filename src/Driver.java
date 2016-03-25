@@ -13,15 +13,17 @@ import java.util.*;
  */
 public class Driver {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		Database x = new Database();
 		try {
-			x = new Database("StarTrekMovies.txt", "StarTrekTV.txt", "SomeActors.txt");
+			x = new Database("StarTrekMovies.txt", "StarTrekTV.txt");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//System.out.println(x.get());
-		//x.searchMap("Angelina Abdullaeva");
+		x.mediaMakerParser("SomeActors.txt");
+		x.searchMap("William Shatner");
+		x.searchMap("Sigourney Weaver");
+		
 		
 	}
 }
