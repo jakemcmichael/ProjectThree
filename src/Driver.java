@@ -22,7 +22,7 @@ public class Driver {
 		}
 		x.mediaMakerParser("SomeActors.txt");
 		x.searchMap("William Shatner");
-		x.searchMap("Sigourney Weaver");
+		//x.searchMap("Sigourney Weaver");
 		
 		
 	}

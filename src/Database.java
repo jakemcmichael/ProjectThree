@@ -24,6 +24,8 @@ public class Database implements Iterable<Media> {
 	private String curName = "";
 	private ArrayList<String> titles = new ArrayList<String>();
 	private ArrayList<String> years = new ArrayList<String>();
+	private ArrayList<ArrayList<String>> makers = new ArrayList<ArrayList<String>>();
+	int count = 0;
 
 	/** Constructs an empty Database object. */
 	public Database() {
@@ -230,9 +232,12 @@ public class Database implements Iterable<Media> {
 			}
 			if(!line.isEmpty()){
 				titles.add(title);
+				count++;
 				years.add(year);
 			}
 			if(line.isEmpty()){
+				System.out.println(count);
+				System.out.println(line);
 				MediaMaker maker = new MediaMaker(titles, years);
 				list2.put(curName, maker);
 				titles.clear();
@@ -241,14 +246,13 @@ public class Database implements Iterable<Media> {
 			line = actbr.readLine();
 		}
 		MediaMaker maker = new MediaMaker(titles, years);
-		//System.out.println(curName);
 		list2.put(curName, maker);
 		actbr.close();
 	}
 	
 	
 	public void searchMap(String in){
-		System.out.println(list2.get(in).getTitle());
+		System.out.println(list2);
 	}
 	
 	public String get(){
