@@ -226,7 +226,7 @@ public class Database implements Iterable<Media> {
 				title += tokens[i] + " ";
 			}
 			year = tokens[marker2];
-				
+				 
 			if(!name.isEmpty()){
 				curName = name;
 			}
