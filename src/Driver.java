@@ -1,6 +1,4 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
+import java.util.Scanner;
 
 /**
  * Project #2 CS 2334, Section 010 Feb 19, 2016
@@ -13,17 +11,9 @@ import java.util.*;
  */
 public class Driver {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args){
 		Database x = new Database();
-		try {
-			x = new Database("StarTrekMovies.txt", "StarTrekTV.txt");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		x.mediaMakerParser("SomeActors.txt");
-		x.searchMap("William Shatner");
-		//x.searchMap("Sigourney Weaver");
-		
-		
+		Scanner scan = new Scanner(System.in);
+		x.userInput();
 	}
 }

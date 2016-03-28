@@ -1,10 +1,18 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Scanner;
 
 /**
  * Project #2 CS 2334, Section 010 Feb 19, 2016
@@ -16,16 +24,17 @@ import java.util.LinkedHashMap;
  * @version 1.0
  */
 
-public class Database implements Iterable<Media> {
+public class Database implements Serializable, Iterable<Media> {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5047111720571243857L;
 	/** Stores the Media objects in this Database. */
 	private ArrayList<Media> list;
+	private ArrayList<String> names = new ArrayList<String>();
 	private LinkedHashMap<String, MediaMaker> list2 = new LinkedHashMap<String, MediaMaker>();
 	private String curName = "";
-	private ArrayList<String> titles = new ArrayList<String>();
-	private ArrayList<String> years = new ArrayList<String>();
-	private ArrayList<ArrayList<String>> makers = new ArrayList<ArrayList<String>>();
-	int count = 0;
 
 	/** Constructs an empty Database object. */
 	public Database() {
@@ -191,18 +200,27 @@ public class Database implements Iterable<Media> {
 		this.add(movie);
 	}
 
-	public void mediaMakerParser(String actorFile) throws IOException {
+	public void actingParser(String actorFile) throws IOException {
+		ArrayList<String> titleList = new ArrayList<String>();
+		ArrayList<String> yearList = new ArrayList<String>();
 		FileReader actfr = new FileReader(actorFile);
 		BufferedReader actbr = new BufferedReader(actfr);
 		String line = actbr.readLine();
+		ArrayList<ArrayList<String>> titleInception = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<String>> yearInception = new ArrayList<ArrayList<String>>();
+		int counter = 0;
+		int movieCount = 0;
+		int seriesCount = 0;
+		boolean add = false;
 		// Reads each line of the Actor file
 		while (line != null) {
+			boolean check1 = false;
 			String name = "";
 			String title = "";
 			String year = "";
 			int marker = 0;
 			String[] tokens = line.split("\\s+");
-			if (!line.isEmpty()) { 
+			if (!line.isEmpty()) {
 				if (tokens[2].contains("(")) {
 					if (tokens[0].contains(",")) {
 						name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(',')) + " " + tokens[2];
@@ -222,41 +240,417 @@ public class Database implements Iterable<Media> {
 					break;
 				}
 			}
+			for (int i = 0; i < tokens.length; i++) {
+				if (line.indexOf('"') == -1 && check1 == false) {
+					title += "MOVIE: ";
+					check1 = true;
+				}
+				if (line.indexOf('"') >= 0 && check1 == false) {
+					if (line.indexOf('#') >= 0)
+						title += "EPISODE: ";
+					else
+						title += "SERIES: ";
+					check1 = true;
+				}
+
+				if (tokens[i].equals("(TV)")) {
+					title += "(TV) ";
+				}
+				if (tokens[i].equals("(V)")) {
+					title += "(V) ";
+				}
+			}
 			for (int i = marker; i < marker2; i++) {
-				title += tokens[i] + " ";
+				if (i != tokens.length - 1)
+					title += tokens[i] + " ";
 			}
 			year = tokens[marker2];
-				 
-			if(!name.isEmpty()){
+
+			if (!name.isEmpty()) {
 				curName = name;
 			}
-			if(!line.isEmpty()){
-				titles.add(title);
-				count++;
-				years.add(year);
+			if (!line.isEmpty()) {
+				titleList.add(title);
+				yearList.add(year);
+				if (line.indexOf('"') == -1)
+					movieCount++;
+				else
+					seriesCount++;
 			}
-			if(line.isEmpty()){
-				System.out.println(count);
-				System.out.println(line);
-				MediaMaker maker = new MediaMaker(titles, years);
-				list2.put(curName, maker);
-				titles.clear();
-				years.clear();
+			if (line.isEmpty()) {
+				titleInception.add(new ArrayList<String>());
+				for (int i = counter; i < titleInception.size(); i++) {
+					for (int x = 0; x < titleList.size(); x++) {
+						titleInception.get(i).add(titleList.get(x));
+					}
+				}
+				yearInception.add(new ArrayList<String>());
+				for (int i = counter; i < yearInception.size(); i++) {
+					for (int x = 0; x < yearList.size(); x++) {
+						yearInception.get(i).add(yearList.get(x));
+					}
+				}
+				if (list2.get(curName) == null) {
+					list2.put(curName, new MediaMaker(curName));
+					names.add(curName);
+				}
+				list2.get(curName).addActingTitles(titleInception.get(counter));
+				list2.get(curName).addActingYears(yearInception.get(counter));
+				list2.get(curName).setActingMovieCredits(movieCount);
+				list2.get(curName).setActingSeriesCredits(seriesCount);
+				titleList.clear();
+				yearList.clear();
+				counter++;
+				movieCount = 0;
+				seriesCount = 0;
+				add = false;
 			}
 			line = actbr.readLine();
 		}
-		MediaMaker maker = new MediaMaker(titles, years);
-		list2.put(curName, maker);
+		titleInception.add(new ArrayList<String>());
+		yearInception.add(new ArrayList<String>());
+		for (int i = titleInception.size() - 1; i < titleInception.size(); i++) {
+			for (int x = 0; x < titleList.size(); x++) {
+				titleInception.get(i).add(titleList.get(x));
+			}
+		}
+		for (int i = yearInception.size(); i < yearInception.size(); i++) {
+			for (int x = 0; x < yearList.size(); x++) {
+				yearInception.get(i).add(yearList.get(x));
+			}
+		}
+		if (list2.get(curName) == null) {
+			list2.put(curName, new MediaMaker(curName));
+			names.add(curName);
+		}
+		list2.get(curName).addActingTitles(titleList);
+		list2.get(curName).addActingYears(yearList);
+		list2.get(curName).setActingMovieCredits(movieCount);
+		list2.get(curName).setActingSeriesCredits(seriesCount);
 		actbr.close();
+		curName = "";
 	}
-	
-	
-	public void searchMap(String in){
-		System.out.println(list2);
+
+	public void directingParser(String directorFile) throws IOException {
+		ArrayList<String> titleList = new ArrayList<String>();
+		ArrayList<String> yearList = new ArrayList<String>();
+		FileReader actfr = new FileReader(directorFile);
+		BufferedReader actbr = new BufferedReader(actfr);
+		String line = actbr.readLine();
+		ArrayList<ArrayList<String>> titleInception = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<String>> yearInception = new ArrayList<ArrayList<String>>();
+		int counter = 0;
+		int movieCount = 0;
+		int seriesCount = 0;
+		// Reads each line of the Director file
+		while (line != null) {
+			String name = "";
+			String title = "";
+			String year = "";
+			int marker = 0;
+			boolean check1 = false;
+			String[] tokens = line.split("\\s+");
+			if (!line.isEmpty()) {
+				if (tokens[2].contains("(")) {
+					if (tokens[0].contains(",")) {
+						name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(',')) + " " + tokens[2];
+						marker = 3;
+					}
+				} else if (!tokens[0].contains(",")) {
+					marker = 0;
+				} else {
+					name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(','));
+					marker = 2;
+				}
+			}
+			int marker2 = 0;
+			for (int x = marker; x < tokens.length; x++) {
+				if (tokens[x].contains("(")) {
+					marker2 = x;
+					break;
+				}
+			}
+			for (int i = 0; i < tokens.length; i++) {
+				if (line.indexOf('"') == -1 && check1 == false) {
+					title += "MOVIE: ";
+					check1 = true;
+				}
+				if (line.indexOf('"') > -1 && check1 == false) {
+					title += "SERIES: ";
+					check1 = true;
+				}
+				if (tokens[i].equals("(TV)")) {
+					title += "(TV) ";
+				}
+				if (tokens[i].equals("(V)")) {
+					title += "(V) ";
+				}
+			}
+			for (int i = marker; i < marker2; i++) {
+				if (i != tokens.length - 1)
+					title += tokens[i] + " ";
+			}
+			year = tokens[marker2];
+
+			if (!name.isEmpty()) {
+				curName = name;
+			}
+			if (!line.isEmpty()) {
+				titleList.add(title);
+				yearList.add(year);
+				if (line.indexOf('"') == -1)
+					movieCount++;
+				else
+					seriesCount++;
+			}
+			if (line.isEmpty()) {
+				titleInception.add(new ArrayList<String>());
+				for (int i = counter; i < titleInception.size(); i++) {
+					for (int x = 0; x < titleList.size(); x++) {
+						titleInception.get(i).add(titleList.get(x));
+					}
+				}
+				yearInception.add(new ArrayList<String>());
+				for (int i = counter; i < yearInception.size(); i++) {
+					for (int x = 0; x < yearList.size(); x++) {
+						yearInception.get(i).add(yearList.get(x));
+					}
+				}
+				if (list2.get(curName) == null) {
+					list2.put(curName, new MediaMaker(curName));
+					names.add(curName);
+				}
+				list2.get(curName).addDirectingTitles(titleInception.get(counter));
+				list2.get(curName).addDirectingYears(yearInception.get(counter));
+				list2.get(curName).setDirectingMovieCredits(movieCount);
+				list2.get(curName).setDirectingSeriesCredits(seriesCount);
+				titleList.clear();
+				yearList.clear();
+				counter++;
+				movieCount = 0;
+				seriesCount = 0;
+			}
+			line = actbr.readLine();
+		}
+		titleInception.add(new ArrayList<String>());
+		yearInception.add(new ArrayList<String>());
+		for (int i = titleInception.size() - 1; i < titleInception.size(); i++) {
+			for (int x = 0; x < titleList.size(); x++) {
+				titleInception.get(i).add(titleList.get(x));
+			}
+		}
+		for (int i = yearInception.size(); i < yearInception.size(); i++) {
+			for (int x = 0; x < yearList.size(); x++) {
+				yearInception.get(i).add(yearList.get(x));
+			}
+		}
+		if (list2.get(curName) == null) {
+			list2.put(curName, new MediaMaker(curName));
+			names.add(curName);
+		}
+		list2.get(curName).addDirectingTitles(titleList);
+		list2.get(curName).addDirectingYears(yearList);
+		list2.get(curName).setDirectingMovieCredits(movieCount);
+		list2.get(curName).setDirectingSeriesCredits(seriesCount);
+		actbr.close();
+		curName = "";
 	}
-	
-	public String get(){
-		return curName;
+
+	public void producingParser(String producingFile) throws IOException {
+		ArrayList<String> titleList = new ArrayList<String>();
+		ArrayList<String> yearList = new ArrayList<String>();
+		FileReader actfr = new FileReader(producingFile);
+		BufferedReader actbr = new BufferedReader(actfr);
+		String line = actbr.readLine();
+		ArrayList<ArrayList<String>> titleInception = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<String>> yearInception = new ArrayList<ArrayList<String>>();
+		int counter = 0;
+		int movieCount = 0;
+		int seriesCount = 0;
+		// Reads each line of the Producer file
+		while (line != null) {
+			String name = "";
+			String title = "";
+			String year = "";
+			int marker = 0;
+			boolean check1 = false;
+			String[] tokens = line.split("\\s+");
+			if (!line.isEmpty()) {
+				if (tokens[2].contains("(")) {
+					if (tokens[0].contains(",")) {
+						name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(',')) + " " + tokens[2];
+						marker = 3;
+					}
+				} else if (!tokens[0].contains(",")) {
+					marker = 0;
+				} else {
+					name = tokens[1] + " " + tokens[0].substring(0, tokens[0].indexOf(','));
+					marker = 2;
+				}
+			}
+			int marker2 = 0;
+			for (int x = marker; x < tokens.length; x++) {
+				if (tokens[x].contains("(")) {
+					marker2 = x;
+					break;
+				}
+			}
+			for (int i = 0; i < tokens.length; i++) {
+				if (line.indexOf('"') == -1 && check1 == false) {
+					title += "MOVIE: ";
+					check1 = true;
+				}
+				if (line.indexOf('"') > -1 && check1 == false) {
+					title += "SERIES: ";
+					check1 = true;
+				}
+				if (tokens[i].equals("(TV)")) {
+					title += "(TV) ";
+				}
+				if (tokens[i].equals("(V)")) {
+					title += "(V) ";
+				}
+			}
+			for (int i = marker; i < marker2; i++) {
+				if (i != tokens.length - 1)
+					title += tokens[i] + " ";
+			}
+			year = tokens[marker2];
+
+			if (!name.isEmpty()) {
+				curName = name;
+			}
+			if (!line.isEmpty()) {
+				titleList.add(title);
+				yearList.add(year);
+				if (line.indexOf('"') == -1)
+					movieCount++;
+				else
+					seriesCount++;
+			}
+			if (line.isEmpty()) {
+				titleInception.add(new ArrayList<String>());
+				for (int i = counter; i < titleInception.size(); i++) {
+					for (int x = 0; x < titleList.size(); x++) {
+						titleInception.get(i).add(titleList.get(x));
+					}
+				}
+				yearInception.add(new ArrayList<String>());
+				for (int i = counter; i < yearInception.size(); i++) {
+					for (int x = 0; x < yearList.size(); x++) {
+						yearInception.get(i).add(yearList.get(x));
+					}
+				}
+				if (list2.get(curName) == null) {
+					list2.put(curName, new MediaMaker(curName));
+					names.add(curName);
+				}
+				list2.get(curName).addProducingTitles(titleInception.get(counter));
+				list2.get(curName).addProducingYears(yearInception.get(counter));
+				list2.get(curName).setProducingMovieCredits(movieCount);
+				list2.get(curName).setProducingSeriesCredits(seriesCount);
+				titleList.clear();
+				yearList.clear();
+				counter++;
+				movieCount = 0;
+				seriesCount = 0;
+			}
+			line = actbr.readLine();
+		}
+		titleInception.add(new ArrayList<String>());
+		yearInception.add(new ArrayList<String>());
+		for (int i = titleInception.size() - 1; i < titleInception.size(); i++) {
+			for (int x = 0; x < titleList.size(); x++) {
+				titleInception.get(i).add(titleList.get(x));
+			}
+		}
+		for (int i = yearInception.size(); i < yearInception.size(); i++) {
+			for (int x = 0; x < yearList.size(); x++) {
+				yearInception.get(i).add(yearList.get(x));
+			}
+		}
+		if (list2.get(curName) == null) {
+			list2.put(curName, new MediaMaker(curName));
+			names.add(curName);
+		}
+		list2.get(curName).addProducingTitles(titleList);
+		list2.get(curName).addProducingYears(yearList);
+		list2.get(curName).setProducingMovieCredits(movieCount);
+		list2.get(curName).setProducingSeriesCredits(seriesCount);
+		actbr.close();
+		curName = "";
+	}
+
+	public void searchMap(String in) {
+		Scanner scan = new Scanner(System.in);
+		String output = "";
+		String response = "";
+		boolean cont = true;
+		if(list2.get(in) != null){
+			while (cont) {
+				System.out.println("Print [g]raphical or [t]ext data?");
+				response = scan.nextLine();
+				if (response.toLowerCase().equals("g")) {
+					list2.get(in).bakePie();
+					cont = false;
+				} else if (response.toLowerCase().equals("t")) {
+					output += list2.get(in).toString();
+					System.out.println(output);
+					cont = false;
+				} else {
+					System.out.println("Please enter a valid response.");
+				}
+			}
+		}
+		else
+			System.out.println("No such name.");
+	}
+
+	public void partialMapSearch(String in) {
+		Scanner scan = new Scanner(System.in);
+		boolean found = false;
+		boolean cont = true;
+		int count = 0;
+		String output = "";
+		String response = "";
+		for (int x = 0; x < names.size(); x++) {
+			if (names.get(x).contains(in)) {
+				if (list2.get(names.get(x)) != null) {
+					output += list2.get(names.get(x)).toString();
+					count++;
+					found = true;
+				}
+			}
+		}
+		if (count == 1) {
+			while (cont) {
+				System.out.println("Print [g]raphical or [t]ext data?");
+				response = scan.nextLine();
+				if (response.toLowerCase().equals("g")) {
+					list2.get(in).bakePie();
+					cont = false;
+				} else if (response.toLowerCase().equals("t")) {
+					System.out.println(output);
+					cont = false;
+				} else {
+					System.out.println("Please enter a valid response.");
+				}
+			}
+		} else
+			System.out.println(output);
+		if (!found)
+			System.out.println("No such name!");
+	}
+
+	public void serializeObject(MediaMaker m) {
+		try {
+			FileOutputStream fileOut = new FileOutputStream("serialized.txt");
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(m);
+			out.close();
+		} catch (IOException i) {
+			i.printStackTrace();
+		}
 	}
 
 	/**
@@ -420,6 +814,339 @@ public class Database implements Iterable<Media> {
 	/** Sorts the objects in this Database by their release year(s). */
 	public void sortByYear() {
 		Collections.sort(this.list, Media.YEAR_COMPARATOR);
+	}
+
+	public void userInput() {
+		System.out.println("Welcome to the Media Database!");
+		System.out.println();
+		Scanner scan = new Scanner(System.in);
+		Database x = new Database();
+		boolean cont = false;
+		boolean media = false;
+		boolean people = false;
+		String option = "";
+		while (!cont) {
+			cont = true;
+			System.out.println("Please enter the filename of the movies file");
+			String movieFile = scan.nextLine();
+			System.out.println("Please enter the filename of the series file");
+			String seriesFile = scan.nextLine();
+			System.out.println("Please enter the filename of the actor file");
+			String actorFile = scan.nextLine();
+			try {
+				actingParser("SomeActors.txt");
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			System.out.println("Please enter the filename of the director file");
+			String directorFile = scan.nextLine();
+			try {
+				directingParser("SomeDirectors.txt");
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			System.out.println("Please enter the filename of the producer file");
+			String producerFile = scan.nextLine();
+			try {
+				producingParser("SomeProducers.txt");
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				x = new Database("StarTrekMovies.txt", "StarTrekTV.txt");
+			} catch (IOException e) {
+				cont = false;
+				System.out.println("A file was not found,");
+			}
+		}
+		boolean quit = false;
+		while (quit == false) {
+			cont = false;
+			while (!cont) {
+				System.out.println("Search [m]edia or [p]eople?");
+				option = scan.nextLine();
+				if (option.toLowerCase().equals("m")) {
+					media = true;
+					people = false;
+					cont = true;
+				} else if (option.toLowerCase().equals("p")) {
+					media = false;
+					people = true;
+					cont = true;
+				} else {
+					System.out.println("Please enter a valid response");
+					cont = false;
+				}
+
+				if (media && cont) {
+					Year input = new Year("x");
+					String titleSearch = "";
+					String yearSearch = "";
+					String output = "";
+					boolean[] bools = new boolean[6];
+					cont = false;
+					while (!cont) {
+						System.out.println("Search [m]ovies, [s]eries, or [b]oth?");
+						option = scan.nextLine();
+						if (option.toLowerCase().equals("m")) {
+							bools[0] = true;
+							cont = true;
+						} else if (option.toLowerCase().equals("s")) {
+							bools[1] = true;
+							cont = true;
+						} else if (option.toLowerCase().equals("b")) {
+							bools[0] = true;
+							bools[1] = true;
+							cont = true;
+						} else {
+							System.out.println("Please enter a valid response.");
+						}
+					}
+					cont = false;
+					while (!cont) {
+						System.out.println("Search [t]itle, [y]ear, or [b]oth?");
+						option = "";
+						option = scan.nextLine();
+						if (option.toLowerCase().equals("t")) {
+							bools[3] = true;
+							cont = true;
+						} else if (option.toLowerCase().equals("y")) {
+							bools[4] = true;
+							cont = true;
+						} else if (option.toLowerCase().equals("b")) {
+							bools[3] = true;
+							bools[4] = true;
+							cont = true;
+						} else
+							System.out.println("Please enter a valid response.");
+					}
+					option = "";
+					cont = false;
+					while (!cont) {
+						if (bools[3]) {
+							System.out.println("Search for [e]xact or [p]artial matches?");
+							option = scan.nextLine();
+							if (option.toLowerCase().equals("e")) {
+								bools[5] = false;
+								cont = true;
+							} else if (option.toLowerCase().equals("p")) {
+								bools[5] = true;
+								cont = true;
+							} else
+								System.out.println("Please enter a valid response");
+						} else
+							cont = true;
+					}
+					cont = false;
+
+					while (!cont && (bools[1] && bools[3])) {
+						option = "";
+						if (bools[1] && bools[3]) {
+							System.out.println("Include episode titles in search and output? (y/n)");
+							option = scan.nextLine();
+							if (option.toLowerCase().equals("y")) {
+								bools[2] = true;
+								cont = true;
+							} else if (option.toLowerCase().equals("n")) {
+								bools[2] = false;
+								cont = true;
+							} else
+								System.out.println("Please enter a valid response");
+						}
+					}
+					option = "";
+					if (bools[3]) {
+						System.out.println("Title?");
+						titleSearch = scan.nextLine();
+					}
+
+					option = "";
+					if (bools[4]) {
+						System.out.println("Year(s)?");
+						yearSearch = scan.nextLine();
+						input = new Year(yearSearch);
+					}
+
+					option = "";
+					System.out.println("Sort by [t]itle or [y]ear?");
+					option = scan.nextLine();
+					if (option.toLowerCase().equals("t"))
+						x.sortByTitle();
+					else if (option.equals("y"))
+						x.sortByYear();
+
+					System.out.println();
+					System.out.print("SEARCHED:");
+					output += "SEARCHED:";
+					if (bools[0]) {
+						System.out.print(" MOVIES");
+						output += " MOVIES";
+					}
+					if (bools[1]) {
+						System.out.print(" SERIES");
+						output += " SERIES";
+					}
+					if (bools[2]) {
+						System.out.print(" EPISODES");
+						output += " EPISODES";
+					}
+					System.out.println();
+					output += "\n";
+
+					if (bools[5] && bools[3]) {
+						if (!bools[4]) {
+							System.out.println("PARTIAL TITLE: " + titleSearch);
+							System.out.println("YEARS: Any");
+							output += "PARTIAL TITLE: " + titleSearch + "\n";
+							output += "YEARS: Any\n";
+						} else {
+							System.out.println("PARTIAL TITLE: " + titleSearch);
+							System.out.println("YEARS: " + yearSearch);
+							output += "PARTIAL TITLE: " + titleSearch + "\n";
+							output += "YEARS: " + yearSearch + "\n";
+						}
+					} else if (!bools[5] && bools[3]) {
+						if (!bools[4]) {
+							System.out.println("EXACT TITLE: " + titleSearch);
+							System.out.println("YEARS: Any");
+							output += "EXACT TITLE: " + titleSearch + "\n";
+							output += "YEARS: Any\n";
+						} else {
+							System.out.println("EXACT TITLE: " + titleSearch);
+							System.out.println("YEARS: " + yearSearch);
+							output += "EXACT TITLE: " + titleSearch + "\n";
+							output += "YEARS: " + yearSearch + "\n";
+						}
+					} else if (bools[4]) {
+						System.out.println("TITLE: Any");
+						System.out.println("YEARS: " + yearSearch);
+						output += "TITLE: Any\n";
+						output += "YEARS: " + yearSearch + "\n";
+					}
+
+					if (option.toLowerCase().equals("t")) {
+						System.out.println("SORTED BY TITLE");
+						output += "SORTED BY TITLE\n";
+					}
+					if (option.toLowerCase().equals("y")) {
+						System.out.println("SORTED BY YEAR");
+						output += "SORTED BY YEAR\n";
+					}
+
+					for (int q = 0; q < 80; q++) {
+						System.out.print("=");
+						output += "=";
+					}
+					System.out.println();
+					output += "\n";
+
+					if (bools[3]) {
+						String result = x.search(titleSearch, input, bools).toString();
+						if (result.isEmpty()) {
+							System.out.println("NO MATCHES");
+							output += "NO MATCHES\n";
+						} else {
+							System.out.println(x.search(titleSearch, input, bools));
+							output += result;
+						}
+					} else if (bools[4]) {
+						String result = x.search("", input, bools).toString();
+						if (result.isEmpty()) {
+							System.out.println("NO MATCHES");
+							output += "NO MATCHES\n";
+						} else {
+							System.out.println(x.search("", input, bools));
+							output += result;
+						}
+					}
+					cont = false;
+					while (!cont) {
+						System.out.println("Would you like to write your output to a file? (y/n)");
+						option = scan.nextLine();
+						if (option.toLowerCase().equals("y")) {
+							System.out.println("File name? Please add '.txt'");
+							option = scan.nextLine();
+							try {
+								FileWriter fw = new FileWriter(option, true);
+								BufferedWriter bw = new BufferedWriter(fw);
+								String[] outputArray = output.split("\n");
+								for (String s : outputArray) {
+									bw.write(s);
+									bw.newLine();
+								}
+								bw.close();
+								output = "";
+							} catch (IOException ioe) {
+								System.err.println("IOException: " + ioe.getMessage());
+							}
+							cont = true;
+						} else if (option.equals("n"))
+							cont = true;
+						else
+							System.out.println("Please enter a valid response.");
+					}
+
+					cont = true;
+					while (cont) {
+						System.out.println("Continue? (y/n)");
+						option = scan.nextLine();
+						if (option.equals("y")) {
+							quit = false;
+							cont = false;
+						} else if (option.equals("n")) {
+							quit = true;
+							cont = false;
+							System.out.println("Thanks for using the MDb!");
+							System.out.println("Closing . . .");
+							System.exit(0);
+						} else
+							System.out.println("Please enter a valid response.");
+					}
+					cont = false;
+					for (int j = 0; j < bools.length; j++)
+						bools[j] = false;
+
+				}
+				if (people && cont) {
+					while (cont && !quit) {
+						System.out.println("Search for [e]xact or [p]artial matches?");
+						String choice = scan.nextLine();
+						if (choice.toLowerCase().equals("e")) {
+							System.out.println("Please enter a name.");
+							choice = scan.nextLine();
+							searchMap(choice);
+							cont = false;
+						} else if (choice.toLowerCase().equals("p")) {
+							System.out.println("Please enter a name.");
+							choice = scan.nextLine();
+							partialMapSearch(choice);
+							cont = false;
+						} else {
+							System.out.println("Please enter a valid response.");
+						}
+						cont = true;
+						while (cont) {
+							System.out.println("Continue? (y/n)");
+							option = scan.nextLine();
+							if (option.equals("y")) {
+								quit = false;
+								cont = false;
+							} else if (option.equals("n")) {
+								quit = true;
+								cont = false;
+								System.out.println("Thanks for using the MDb!");
+								System.out.println("Closing . . .");
+								System.exit(0);
+							} else
+								System.out.println("Please enter a valid response.");
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/**
