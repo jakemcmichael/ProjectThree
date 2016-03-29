@@ -1,9 +1,9 @@
 import java.util.Comparator;
 
 /**
- * Project #2
+ * Project #3
  * CS 2334, Section 010
- * Feb 19, 2016 
+ * March 28, 2016 
  * <P>
  * Media is an abstract class defining data and methods common to movies, broadcast series, 
  * and broadcast episodes. It also contains an anonymous comparator for sorting Media objects 

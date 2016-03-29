@@ -1,7 +1,7 @@
 /**
- * Project #2
+ * Project #3
  * CS 2334, Section 010
- * Feb 19, 2016 
+ * March 28, 2016
  * <P>
  * The Episode class specifies a type of Media with a series title, 
  * episode number, and the possibility of being suspended. 
@@ -19,10 +19,10 @@ public class Episode extends Media {
 	/**
 	 * Constructs an Episode object by passing data to the parse method 
 	 * and adds that Episode to the specified Series.
-	 * @param title 
-	 * @param year 
-	 * @param uniqueID  
-	 * @param isSuspended 
+	 * @param title the title of the episode
+	 * @param year the year
+	 * @param uniqueID  the uniqueID
+	 * @param isSuspended whether or not it is suspended
 	 */
 	public Episode(String title, String year, String uniqueID, boolean isSuspended){
 		this.setTitle(title);

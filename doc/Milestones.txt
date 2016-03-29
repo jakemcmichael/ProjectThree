@@ -1,0 +1,13 @@
+1. Implement Serializable for the classes necessary to save and load all application data.
+		We did succeed in implementing Serializable to all of the methods that require it.
+2. Use object serialization to save and load the application data to and from a binary file.
+		We were able to Serialize the data from our output to a file. However, we were not able to figure out how to use the data
+		one we reloaded it and deserialized it from the binary file. 
+3. Implement a simple graphical display for showing counts of the application data.
+		The pie chart is working as intended, however, the histogram was very difficult. We understand the logic and mathematics behind
+		it, but simply got stuck when implementing it. We tried to add each year as a key to a hashmap and then storing how many repeats
+		of that year existed, but were unable in figuring out how to make the histogram come together completely. We tried. We really did. For a long time.
+4. Create appropriate classes to store information on media makers.
+		We met this milestone as far as we know.
+5. Use LinkedHashMaps to save to and retrieve information on media makers. 
+		I am 100% sure that we did this. 

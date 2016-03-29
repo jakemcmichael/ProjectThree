@@ -1,10 +1,9 @@
 import java.util.Scanner;
 
 /**
- * Project #2 CS 2334, Section 010 Feb 19, 2016
+ * Project #3 CS 2334, Section 010 March 28, 2016
  * <P>
- * This class contains the main method and methods for handling user
- * interaction.
+ * This is the driver for the class.
  * </P>
  * 
  * @version 1.0

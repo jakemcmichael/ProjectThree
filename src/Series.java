@@ -1,7 +1,7 @@
 /**
- * Project #2
+ * Project #3
  * CS 2334, Section 010
- * Feb 19, 2016 
+ * March 28, 2016 
  * <P>
  * The Series class specifies a type of Media with a list of episodes. 
  * This class also provides Series specific methods for parsing, 

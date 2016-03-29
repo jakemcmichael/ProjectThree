@@ -3,7 +3,14 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
-
+/**
+ * Project #3 CS 2334, Section 010 March 28, 2016
+ * <P>
+ * Creates and displays a pie chart!
+ * </P>
+ * 
+ * @version 1.0
+ */
 public class PieChart extends JPanel {
 	/**
 	 * 

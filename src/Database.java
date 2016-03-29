@@ -15,10 +15,10 @@ import java.util.LinkedHashMap;
 import java.util.Scanner;
 
 /**
- * Project #2 CS 2334, Section 010 Feb 19, 2016
+ * Project #3 CS 2334, Section 010 March 28, 2016
  * <P>
- * The Database class contains an ArrayList of Media as well as providing
- * methods for sorting and searching the Media in a variety of ways.
+ * The Database class contains all of the methods and data necessary to load
+ * data on MediaMakers and Media.
  * </P>
  * 
  * @version 1.0
@@ -32,8 +32,11 @@ public class Database implements Serializable, Iterable<Media> {
 	private static final long serialVersionUID = 5047111720571243857L;
 	/** Stores the Media objects in this Database. */
 	private ArrayList<Media> list;
+	/** Stores the names for temporary use */
 	private ArrayList<String> names = new ArrayList<String>();
+	/** Stores the data on all of the MediaMakers */
 	private LinkedHashMap<String, MediaMaker> list2 = new LinkedHashMap<String, MediaMaker>();
+	/** Tracks the current name of the MediaMaker */
 	private String curName = "";
 
 	/** Constructs an empty Database object. */
@@ -50,6 +53,7 @@ public class Database implements Serializable, Iterable<Media> {
 	 * @param TVFile
 	 *            File containing data on Series and Episodes.
 	 * @throws IOException
+	 *             throws an IO exception
 	 */
 	public Database(String movieFile, String TVFile) throws IOException {
 		this.list = new ArrayList<Media>();
@@ -109,22 +113,17 @@ public class Database implements Serializable, Iterable<Media> {
 	 * 
 	 * @param data
 	 *            A line from the TV file specifying data on a Series.
+	 * 
+	 * @return series returns the series object
 	 */
-	public void seriesParser(String data) {
-		String year = data.substring(data.length() - 9); // last 9 char are the
-															// year range
+	public Series seriesParser(String data) {
+		String year = data.substring(data.length() - 9);
 		int titleEnd = data.lastIndexOf("\"");
-		String title = data.substring(1, titleEnd); // isolates the title
-													// without the quotes
-		String uniqueID = data.substring(titleEnd + 1, data.length() - 10).trim(); // this
-																					// is
-																					// the
-																					// starting
-																					// year
-																					// in
-																					// parentheses
+		String title = data.substring(1, titleEnd);
+		String uniqueID = data.substring(titleEnd + 1, data.length() - 10).trim();
 		Series series = new Series(title, year, uniqueID);
 		this.add(series);
+		return series;
 	}
 
 	/**
@@ -133,8 +132,9 @@ public class Database implements Serializable, Iterable<Media> {
 	 * 
 	 * @param data
 	 *            A line from the TV file specifying data on an Episode.
+	 * @return
 	 */
-	public void episodeParser(String data) {
+	public Episode episodeParser(String data) {
 		String year = data.substring(data.length() - 4); // year is the last
 															// four char
 		int seriesTitleEnd = data.lastIndexOf("\"");
@@ -165,6 +165,7 @@ public class Database implements Serializable, Iterable<Media> {
 													// suspended
 		Episode episode = new Episode(title, year, uniqueID, isSuspended);
 		this.add(episode);
+		return episode;
 	}
 
 	/**
@@ -173,21 +174,13 @@ public class Database implements Serializable, Iterable<Media> {
 	 * 
 	 * @param data
 	 *            A line from the Movie file specifying data on a Movie.
+	 * @return movie returns the movie object
 	 */
-	public void movieParser(String data) {
-		String year = data.substring(data.length() - 4); // year is the last
-															// four char
-		int IDStart = data.indexOf("(" + year); // ID starts with (#### where
-												// #### is the year
-		String title = data.substring(0, IDStart - 1).trim(); // title is
-																// everything
-																// before the ID
-		String uniqueID = data.substring(IDStart, data.indexOf(")", IDStart) + 1); // ID
-																					// is
-																					// everything
-																					// in
-																					// those
-																					// parentheses
+	public Movie movieParser(String data) {
+		String year = data.substring(data.length() - 4);
+		int IDStart = data.indexOf("(" + year);
+		String title = data.substring(0, IDStart - 1).trim();
+		String uniqueID = data.substring(IDStart, data.indexOf(")", IDStart) + 1);
 		String releaseType;
 		if (data.contains("(V)")) {
 			releaseType = " (straight to video)";
@@ -198,9 +191,19 @@ public class Database implements Serializable, Iterable<Media> {
 		}
 		Movie movie = new Movie(title, year, uniqueID, releaseType);
 		this.add(movie);
+		return movie;
 	}
 
-	public void actingParser(String actorFile) throws IOException {
+	/**
+	 * Parses all of the data found within the Actor file.
+	 * 
+	 * @param actorFile
+	 *            File containing data on actors
+	 * 
+	 * @throws IOException
+	 *             throws an IO exception
+	 */
+	void actingParser(String actorFile) throws IOException {
 		ArrayList<String> titleList = new ArrayList<String>();
 		ArrayList<String> yearList = new ArrayList<String>();
 		FileReader actfr = new FileReader(actorFile);
@@ -331,7 +334,16 @@ public class Database implements Serializable, Iterable<Media> {
 		curName = "";
 	}
 
-	public void directingParser(String directorFile) throws IOException {
+	/**
+	 * Parses all of the data found within the Director file.
+	 * 
+	 * @param directorFile
+	 *            File containing data on directors
+	 * 
+	 * @throws IOException
+	 *             throws an IO exception
+	 */
+	void directingParser(String directorFile) throws IOException {
 		ArrayList<String> titleList = new ArrayList<String>();
 		ArrayList<String> yearList = new ArrayList<String>();
 		FileReader actfr = new FileReader(directorFile);
@@ -456,7 +468,16 @@ public class Database implements Serializable, Iterable<Media> {
 		curName = "";
 	}
 
-	public void producingParser(String producingFile) throws IOException {
+	/**
+	 * Parses all of the data found within the Producer file.
+	 * 
+	 * @param producingFile
+	 *            File containing data on producers
+	 * 
+	 * @throws IOException
+	 *             throws an IO exception
+	 */
+	void producingParser(String producingFile) throws IOException {
 		ArrayList<String> titleList = new ArrayList<String>();
 		ArrayList<String> yearList = new ArrayList<String>();
 		FileReader actfr = new FileReader(producingFile);
@@ -581,12 +602,18 @@ public class Database implements Serializable, Iterable<Media> {
 		curName = "";
 	}
 
-	public void searchMap(String in) {
+	/**
+	 * Searches through the HashMap for a key.
+	 * 
+	 * @param in
+	 *            Name to search through with.
+	 */
+	void searchMap(String in) {
 		Scanner scan = new Scanner(System.in);
 		String output = "";
 		String response = "";
 		boolean cont = true;
-		if(list2.get(in) != null){
+		if (list2.get(in) != null) {
 			while (cont) {
 				System.out.println("Print [g]raphical or [t]ext data?");
 				response = scan.nextLine();
@@ -597,16 +624,45 @@ public class Database implements Serializable, Iterable<Media> {
 					output += list2.get(in).toString();
 					System.out.println(output);
 					cont = false;
+					System.out.println("Save? (y/n)");
+					response = scan.nextLine();
+					if (response.equals("y")) {
+						System.out.println("Save [b]inary or [t]ext?");
+						response = scan.nextLine();
+						if (response.equals("b")) {
+							list2.get(in).serializeObject();
+							System.out.println("Saved as serialized.txt");
+						} else if (response.equals("t")) {
+							System.out.println("File name? Please add '.txt'");
+							String option = scan.nextLine();
+							try {
+								FileWriter fw = new FileWriter(option, true);
+								BufferedWriter bw = new BufferedWriter(fw);
+								String output2 = list2.get(in).toString();
+								bw.write(output2);
+								bw.close();
+								output2 = "";
+							} catch (IOException ioe) {
+								System.err.println("IOException: " + ioe.getMessage());
+							}
+						}
+					}
 				} else {
 					System.out.println("Please enter a valid response.");
 				}
 			}
-		}
-		else
+		} else
 			System.out.println("No such name.");
 	}
 
-	public void partialMapSearch(String in) {
+	/**
+	 * Searches through the HashMap for a key.
+	 * 
+	 * @param in
+	 *            Name to search through with.
+	 * 
+	 */
+	void partialMapSearch(String in) {
 		Scanner scan = new Scanner(System.in);
 		boolean found = false;
 		boolean cont = true;
@@ -642,24 +698,13 @@ public class Database implements Serializable, Iterable<Media> {
 			System.out.println("No such name!");
 	}
 
-	public void serializeObject(MediaMaker m) {
-		try {
-			FileOutputStream fileOut = new FileOutputStream("serialized.txt");
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(m);
-			out.close();
-		} catch (IOException i) {
-			i.printStackTrace();
-		}
-	}
-
 	/**
 	 * Adds a Media object to the ArrayList in this Database.
 	 * 
 	 * @param mediaToAdd
 	 *            The Media object to be added.
 	 */
-	public void add(Media mediaToAdd) {
+	void add(Media mediaToAdd) {
 		this.list.add(mediaToAdd);
 	}
 
@@ -816,6 +861,9 @@ public class Database implements Serializable, Iterable<Media> {
 		Collections.sort(this.list, Media.YEAR_COMPARATOR);
 	}
 
+	/**
+	 * Controls all of the user input
+	 */
 	public void userInput() {
 		System.out.println("Welcome to the Media Database!");
 		System.out.println();
@@ -827,6 +875,10 @@ public class Database implements Serializable, Iterable<Media> {
 		String option = "";
 		while (!cont) {
 			cont = true;
+			System.out.println("Read from [t]ext file or [b]inary?");
+			option = scan.nextLine();
+			if (option.toLowerCase().equals("b"))
+				System.out.println("We could not figure out how to load binary data correctly. I am sorry.");
 			System.out.println("Please enter the filename of the movies file");
 			String movieFile = scan.nextLine();
 			System.out.println("Please enter the filename of the series file");
@@ -834,7 +886,7 @@ public class Database implements Serializable, Iterable<Media> {
 			System.out.println("Please enter the filename of the actor file");
 			String actorFile = scan.nextLine();
 			try {
-				actingParser("SomeActors.txt");
+				actingParser(actorFile);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -842,7 +894,7 @@ public class Database implements Serializable, Iterable<Media> {
 			System.out.println("Please enter the filename of the director file");
 			String directorFile = scan.nextLine();
 			try {
-				directingParser("SomeDirectors.txt");
+				directingParser(directorFile);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -850,13 +902,13 @@ public class Database implements Serializable, Iterable<Media> {
 			System.out.println("Please enter the filename of the producer file");
 			String producerFile = scan.nextLine();
 			try {
-				producingParser("SomeProducers.txt");
+				producingParser(producerFile);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			try {
-				x = new Database("StarTrekMovies.txt", "StarTrekTV.txt");
+				x = new Database(movieFile, seriesFile);
 			} catch (IOException e) {
 				cont = false;
 				System.out.println("A file was not found,");
